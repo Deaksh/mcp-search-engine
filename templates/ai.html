@@ -1,0 +1,17 @@
+<!-- templates/ai.html -->
+<html>
+<head><title>AI MCP Recommender</title></head>
+<body>
+  <h1>AI-Powered Tool Recommender</h1>
+  <form method="get">
+    <input type="text" name="task" placeholder="Describe your task" value="{{ task }}" size="60" />
+    <input type="submit" value="Ask AI" />
+  </form>
+
+  {% if response %}
+    <h2>AI Suggestions:</h2>
+    <pre>{{ response }}</pre>
+  {% endif %}
+  <a href="/">← Back</a>
+</body>
+</html>

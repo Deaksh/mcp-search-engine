@@ -1,0 +1,24 @@
+<!-- templates/search.html -->
+<html>
+<head><title>Search Tools</title></head>
+<body>
+  <h1>Keyword-Based MCP Search</h1>
+  <form method="get">
+    <input type="text" name="query" placeholder="e.g. translate text" value="{{ query }}" />
+    <input type="submit" value="Search" />
+  </form>
+
+  {% if results %}
+    <h2>Results:</h2>
+    <ul>
+    {% for tool in results %}
+      <li>
+        <strong>{{ tool.name }}</strong> - {{ tool.description }}<br/>
+        <em>Tags:</em> {{ ", ".join(tool.tags or []) }}
+      </li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+  <a href="/">← Back</a>
+</body>
+</html>

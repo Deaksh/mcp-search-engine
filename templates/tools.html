@@ -1,0 +1,16 @@
+<!-- templates/tools.html -->
+<html>
+<head><title>MCP Tools</title></head>
+<body>
+  <h1>All MCP Tools</h1>
+  <ul>
+    {% for tool in tools %}
+      <li>
+        <strong>{{ tool.name }}</strong> - {{ tool.description }} <br/>
+        <em>Tags:</em> {{ ", ".join(tool.tags or []) }}
+      </li>
+    {% endfor %}
+  </ul>
+  <a href="/">← Back</a>
+</body>
+</html>
