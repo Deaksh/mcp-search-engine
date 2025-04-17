@@ -25,7 +25,7 @@ app.add_middleware(
 templates = Jinja2Templates(directory="templates")
 
 # Load ranked MCPs (static fallback)
-with open("awesome-mcp-servers/ranked_mcp_data.json", "r") as f:
+with open("ranked_mcp_data.json", "r") as f:
     ranked_mcps = json.load(f)
 
 # Environment
