@@ -1,0 +1,13 @@
+name: Keep Render App Alive
+
+on:
+  schedule:
+    # Runs every 14 minutes (Render free tier idle timeout is ~15 mins)
+    - cron: '*/14 * * * *'
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Curl Ping to Render App
+        run: curl -s https://mcp-search-engine.onrender.com > /dev/null
