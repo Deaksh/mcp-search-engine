@@ -30,7 +30,7 @@ with open("proxy_config.ranked.json", "r") as f:
 
 # Environment
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = "llama3-8b-8192"
+GROQ_MODEL = "llama-3.3-70b-versatile"
 MCP_PROXY_URL = os.getenv("MCP_PROXY_URL", "http://localhost:8080")  # Optional override
 
 # ---------- Backend APIs ----------
