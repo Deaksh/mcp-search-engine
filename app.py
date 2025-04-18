@@ -25,7 +25,7 @@ app.add_middleware(
 templates = Jinja2Templates(directory="templates")
 
 # Load ranked MCPs (static fallback)
-with open("ranked_mcp_data.enriched.json", "r") as f:
+with open("proxy_config.ranked.json", "r") as f:
     ranked_mcps = json.load(f)
 
 # Environment
@@ -48,7 +48,7 @@ def recommend_mcp(query: str = Query(...), top_k: int = Query(5)):
             score += 2
         if mcp.get("name", "") in query:
             score += 5
-        score += mcp.get("score", 0) * 0.5
+        score += mcp.get("mcprank_score", 0) * 5  # weight mcprank_score higher
         return score
 
     ranked = sorted(ranked_mcps, key=relevance, reverse=True)
