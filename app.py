@@ -7,6 +7,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from typing import List
+from bs4 import BeautifulSoup
+
 
 load_dotenv()
 
@@ -25,13 +27,32 @@ app.add_middleware(
 templates = Jinja2Templates(directory="templates")
 
 # Load ranked MCPs (static fallback)
-with open("proxy_config.ranked.json", "r") as f:
-    ranked_mcps = json.load(f)
+with open("awesome-mcp-servers/ranked_mcp_data.enriched.json", "r") as f:
+   ranked_mcps = json.load(f)
 
 # Environment
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "llama3-8b-8192"
 MCP_PROXY_URL = os.getenv("MCP_PROXY_URL", "http://localhost:8080")  # Optional override
+
+
+def get_all_mcp_sources():
+    all_tools = {}
+
+    # Static JSON
+    for tool in ranked_mcps:
+        tool["source"] = "static"
+        all_tools[tool["name"]] = tool
+
+    # Dynamic from proxy
+    try:
+        proxy_res = requests.get(f"{MCP_PROXY_URL}/list_tools", timeout=5)
+        if proxy_res.status_code == 200:
+            for tool in proxy_res.json():
+                tool["source"] = "proxy"
+                all_tools[tool["name"]] = tool
+    except Exception as e:
+        print(f"Proxy error: {e}")
 
 # ---------- Backend APIs ----------
 
@@ -63,7 +84,7 @@ You are an intelligent assistant helping find the right MCP (Model Context Proto
 Given the following task: "{task}"
 
 Choose the most relevant MCPs from this list based on tags, descriptions, and capabilities:
-{json.dumps(ranked_mcps, indent=2)}
+{json.dumps(get_all_mcp_sources(), indent=2)}
 
 Return a list of top {top_k} MCPs that best help accomplish the task, with brief explanation for each.
 """
