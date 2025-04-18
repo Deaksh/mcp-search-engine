@@ -3,4 +3,5 @@ uvicorn
 requests
 python-dotenv
 jinja2
-BeautifulSoup
+beautifulsoup4>=4.12.2
+
