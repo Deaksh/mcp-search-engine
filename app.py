@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 from typing import List
 from bs4 import BeautifulSoup
 
-
 load_dotenv()
 
 app = FastAPI()
@@ -28,11 +27,11 @@ templates = Jinja2Templates(directory="templates")
 
 # Load ranked MCPs (static fallback)
 with open("ranked_mcp_data.enriched.json", "r") as f:
-   ranked_mcps = json.load(f)
+    ranked_mcps = json.load(f)
 
 # Environment
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = "llama3-8b-8192"
+GROQ_MODEL = "llama-3.3-70b-versatile"
 MCP_PROXY_URL = os.getenv("MCP_PROXY_URL", "http://localhost:8080")  # Optional override
 
 
@@ -53,6 +52,9 @@ def get_all_mcp_sources():
                 all_tools[tool["name"]] = tool
     except Exception as e:
         print(f"Proxy error: {e}")
+
+    return list(all_tools.values())  # Ensure the list is returned
+
 
 # ---------- Backend APIs ----------
 
@@ -78,15 +80,32 @@ def recommend_mcp(query: str = Query(...), top_k: int = Query(5)):
 
 @app.get("/recommend-ai")
 def recommend_ai(task: str = Query(...), top_k: int = Query(5)):
+    all_tools = get_all_mcp_sources()
+
+    # Basic filtering to reduce prompt size before calling LLM
+    def quick_relevance(tool):
+        desc = tool.get("description", "").lower()
+        tags = " ".join(tool.get("tags", [])).lower()
+        score = 0
+        if task.lower() in desc:
+            score += 2
+        if any(tag in task.lower() for tag in tags.split()):
+            score += 1
+        score += tool.get("mcprank_score", 0) * 2
+        return score
+
+    # Sort and select top N tools to feed the LLM
+    filtered_tools = sorted(all_tools, key=quick_relevance, reverse=True)[:25]  # Trim to top 25 tools
+
     prompt = f"""
 You are an intelligent assistant helping find the right MCP (Model Context Protocol) servers.
 
 Given the following task: "{task}"
 
 Choose the most relevant MCPs from this list based on tags, descriptions, and capabilities:
-{json.dumps(get_all_mcp_sources(), indent=2)}
+{json.dumps(filtered_tools, indent=2)}
 
-Return a list of top {top_k} MCPs that best help accomplish the task, with brief explanation for each.
+Return a list of top {top_k} MCPs that best help accomplish the task, with a brief explanation for each.
 """
 
     headers = {
@@ -108,6 +127,7 @@ Return a list of top {top_k} MCPs that best help accomplish the task, with brief
         return {"error": response.text}
 
     ai_response = response.json()["choices"][0]["message"]["content"]
+
     return {"task": task, "llm_response": ai_response}
 
 
@@ -148,5 +168,9 @@ def search_ui(request: Request, query: str = "", top_k: int = 5):
 def ai_ui(request: Request, task: str = "", top_k: int = 5):
     ai_response = ""
     if task:
-        ai_response = recommend_ai(task=task, top_k=top_k)["llm_response"]
+        result = recommend_ai(task=task, top_k=top_k)
+        if "llm_response" in result:
+            ai_response = result["llm_response"]
+        else:
+            ai_response = f"Error from AI: {result.get('error', 'Unknown error')}"
     return templates.TemplateResponse("ai.html", {"request": request, "task": task, "response": ai_response})
