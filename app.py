@@ -31,7 +31,7 @@ with open("ranked_mcp_data.enriched.json", "r") as f:
 
 # Environment
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "llama3-70b-8192"
 MCP_PROXY_URL = os.getenv("MCP_PROXY_URL", "http://localhost:8080")  # Optional override
 
 
